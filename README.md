@@ -18,16 +18,19 @@ Firts Step installation:
   pip install django
 6. Install Daphne
   pip install daphne
+7. Install Redis
+   https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/install-redis-on-linux/
 
 Read this tutorial for more complete explanation
 https://greenwebpage.com/community/how-to-install-django-web-framework-on-ubuntu-24-04/
 
 Download code and save in your Python directory
-1. Activate Python Virtual Enviroment
+1. Run Redis Server
+2. Activate Python Virtual Enviroment
    source Env/bin/activate
-2. move to youprint folder
+3. move to youprint folder
    cd youprint
-3. run Daphine Server
+4. run Daphine Server
    daphne -p 8000 youprint.asgi:application
-4. Open your browser and open http://127.0.0.1:8000/upload/
-5. Upload .csv where download from this repo folder fileCsv
+5. Open your browser and open http://127.0.0.1:8000/upload/
+6. Upload .csv where download from this repo folder fileCsv
