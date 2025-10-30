@@ -19,6 +19,9 @@ Firts Step installation:
 6. Install Daphne
   pip install daphne
 
+Read this tutorial for more complete explanation
+https://greenwebpage.com/community/how-to-install-django-web-framework-on-ubuntu-24-04/
+
 Download code and save in your Python directory
 1. Activate Python Virtual Enviroment
    source Env/bin/activate
