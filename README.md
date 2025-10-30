@@ -10,7 +10,7 @@ To run this application
 Firts Step installation:
 
 1. Install Python
-  sudo apt-get install python
+   sudo apt-get install python
 2. Create Virtual Enviroment on your Django Directory
    python3 -m venv Env
 4. Instal PIP
@@ -26,11 +26,13 @@ https://greenwebpage.com/community/how-to-install-django-web-framework-on-ubuntu
 
 Download code and save in your Python directory
 1. Run Redis Server
+   sudo systemctl start redis-server
 2. Activate Python Virtual Enviroment
    source Env/bin/activate
-3. move to youprint folder
+3. Move to youprint folder
    cd youprint
 4. run Daphine Server
    daphne -p 8000 youprint.asgi:application
 5. Open your browser and open http://127.0.0.1:8000/upload/
 6. Upload .csv where download from this repo folder fileCsv
+   https://github.com/projack1989/youprint/tree/main/fileCsv
