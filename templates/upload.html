@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload CSV Real-Time</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+    progress { width: 100%; height: 20px; }
+    .status-pending { color: gray; }
+    .status-processing { color: orange; }
+    .status-success { color: green; }
+    .status-failed { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Upload CSV File</h2>
+  <form id="uploadForm" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" id="file" name="file" required />
+    <button type="submit">Upload</button>
+  </form>
+
+  <h3>Status: <span id="status" class="status-pending">Waiting...</span></h3>
+  <progress id="progressBar" value="0" max="100"></progress>
+
+  <h2>Upload History</h2>
+  <table id="logTable">
+    <thead>
+      <tr>
+        <th>File Name</th>
+        <th>Upload Date</th>
+        <th>Status</th>
+        <th>Count</th>
+        <th>Succes</th>
+        <th>Duplicate</th>
+        <th>Failed</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>{{ log.file_name }}</td>
+        <td>{{ log.uploaded_at|date:"Y-m-d H:i:s" }}</td>
+        <td class="status-{{ log.status|lower }}">{{ log.status }}</td>
+        <td>{{ log.total_rows }}</td>
+        <td>{{ log.success_rows }}</td>
+        <td>{{ log.skipped_rows }}</td>
+        <td>{{ log.failed_rows }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7">Belum ada upload</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <script>
+    const socket = new WebSocket('ws://' + window.location.host + '/ws/upload-progress/');
+    const progressBar = document.getElementById('progressBar');
+    const statusText = document.getElementById('status');
+    const logTable = document.getElementById('logTable').getElementsByTagName('tbody')[0];
+
+    socket.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+
+      // update progress bar
+      if (data.progress !== undefined) {
+        progressBar.value = data.progress;
+        statusText.textContent = `Processing ${data.progress}%`;
+        statusText.className = "status-processing";
+      }
+
+      // update status realtime
+      if (data.status) {
+        statusText.textContent = data.status;
+        statusText.className = "status-" + data.status.toLowerCase();
+      }
+
+      // === tambahan realtime update ===
+      if (data.summary) {
+        // cari baris dengan nama file yang sesuai
+        let existingRow = Array.from(logTable.rows).find(row => row.cells[0]?.textContent === data.file);
+        const [created, updated, failed] = data.summary.match(/\d+/g) || [0,0,0];
+
+        if (!existingRow) {
+          existingRow = logTable.insertRow(0);
+          existingRow.innerHTML = `
+            <td>${data.file}</td>
+            <td>${new Date().toLocaleString()}</td>
+            <td class="status-${data.status.toLowerCase()}">${data.status}</td>
+            <td>0</td><td>0</td><td>0</td><td>0</td>
+          `;
+        }
+
+        // update nilai total, berhasil, duplikat, gagal
+        existingRow.cells[3].textContent = parseInt(created) + parseInt(updated) + parseInt(failed);
+        existingRow.cells[4].textContent = created;
+        existingRow.cells[5].textContent = updated;
+        existingRow.cells[6].textContent = failed;
+      }
+
+      // jika success, tambahkan ke tabel tanpa reload
+      if (data.status === "Success" && !data.summary) {
+        const row = logTable.insertRow(0);
+        row.innerHTML = `
+          <td>${data.file}</td>
+          <td>${new Date().toLocaleString()}</td>
+          <td class="status-success">Success</td>
+          <td>-</td><td>-</td><td>-</td><td>-</td>
+        `;
+      }
+
+    };
+
+    // form upload
+    document.getElementById('uploadForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      progressBar.value = 0;
+      statusText.textContent = "Process Upload...";
+      statusText.className = "status-processing";
+
+      const response = await fetch("{% url 'upload_csv' %}", {
+        method: 'POST',
+        body: formData
+      });
+      const result = await response.json();
+      if (result.status === "success") {
+        console.log("Upload is complete");
+        document.getElementById('file').value= null;
+      } else {
+        alert(result.error || "There is an Eror");
+        statusText.textContent = "Failed";
+        statusText.className = "status-failed";
+      }
+    };
+  </script>
+</body>
+</html>
