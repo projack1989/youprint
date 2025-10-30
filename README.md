@@ -30,4 +30,4 @@ Download code and save in your Python directory
 3. run Daphine Server
    daphne -p 8000 youprint.asgi:application
 4. Open your browser and open http://127.0.0.1:8000/upload/
-5. Upload .csv where download from this repo 
+5. Upload .csv where download from this repo folder fileCsv
